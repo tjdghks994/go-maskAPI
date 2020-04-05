@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	maskapi "tjdghks994/maskAPI/maskApi"
+
+	maskapi "github.com/tjdghks994/go-maskAPI/maskApi"
 )
 
 var salesURL string = "https://8oi9s0nnth.apigw.ntruss.com/corona19-masks/v1/sales/json?page="
@@ -35,6 +36,45 @@ func main() {
 		sales = append(sales, salesTemp...)
 	}
 
-	fmt.Println(len(store), len(sales))
+	drugName := "성모약국"
+	searchDrug := make(map[string]maskapi.MaskInfo)
 
+	for _, drug := range store {
+		if drug.Name == drugName {
+			searchDrug[drug.Code] = maskapi.MaskInfo{
+				Code: drug.Code,
+				Name: drug.Name,
+				Addr: drug.Addr,
+				Lat:  drug.Lat,
+				Lng:  drug.Lng,
+			}
+		}
+	}
+
+	for _, remain := range sales {
+		resultKey, resultValue := compareCode(remain, searchDrug)
+		searchDrug[resultKey] = resultValue
+	}
+
+	for _, v := range searchDrug {
+		fmt.Println(v)
+	}
+
+}
+
+func compareCode(m maskapi.MaskInfo, drug map[string]maskapi.MaskInfo) (string, maskapi.MaskInfo) {
+	for key, value := range drug {
+		if m.Code == key {
+			temp := maskapi.MaskInfo{}
+			temp.Code = key
+			temp.Name = value.Name
+			temp.Addr = value.Addr
+			temp.Lat = value.Lat
+			temp.Lng = value.Lng
+			temp.Remain = m.Remain
+
+			return key, temp
+		}
+	}
+	return "", maskapi.MaskInfo{}
 }
